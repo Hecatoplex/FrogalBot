@@ -39,7 +39,7 @@ async def get_next_day(now: datetime.datetime) -> datetime.datetime:
   return next_day
   
 def get_quote():
-  quoteslist = open("quotes.txt", "r").read().split("\n")
+  quoteslist = open("MichigansHolyWord.txt", "r").read().split("\n")
   quote = random.choice(quoteslist)
 
   while db["quote"] == quote:
