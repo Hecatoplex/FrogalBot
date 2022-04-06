@@ -52,6 +52,8 @@ def get_quote():
 async def on_ready():
   global prayers
 
+  db['next_frog_fact'] = random.randint(100, 150)
+
   prayers = bot.get_channel(819647510422618152)
   print('foes: ' + "".join([bot.get_user(id).name for id in db['foeslist']]))
   print('friends: ' + "".join([bot.get_user(id).name for id in db['notfoeslist']]))
@@ -82,17 +84,24 @@ async def on_ready():
 #@error_messager(prayers)
 async def fqotd_looper():
   print("new day")
-  print("foes: " + ", ".join([bot.get_user(id).name for id in db['foeslist']]))
-  print("friends: " + ", ".join([bot.get_user(id).name for id in db['notfoeslist']]))
 
+  # if db['next_frog_fact'] <= 0:
+  #   await prayers.send('Unfortunately, we have run out of frog quotes for now. Until the next shipment arrives, we will be showing you frog facts!')
+    
+  
   quote = get_quote()
-  await prayers.send("**FROG QUOTE OF THE DAY:**\n"+ quote)
+  today = datetime.datetime.today()
+  embed = discord.Embed(title="Frog Quote of the Day")
+  embed.add_field(name="", value=quote)
+  embed.set_footer(text=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][today.weekday()]+' '+['January','February','March','April','May','June','July','August','September','November','December'][today.month-1]+' '+str(today.day)+(['st','nd','rd','th'][min(today.day-1, 3)])+', '+str(today.year))
+  await prayers.send("", embed=embed)
+  db['next_frog_fact'] -= 1
 
 @bot.command(name="help")
 async def custom_help(ctx):
   embed = discord.Embed(title="FrogalBot Help")
   
-  embed.add_field(name="&say-fqotd", value="Says the current Frog Quote of the Day in #prayers. Resets at 1:00 UTC.")
+  embed.add_field(name="&say-fqotd", value="Says the current Frog Quote of the Day in #prayers. Uses UTC time.")
   embed.add_field(name="&when-fqotd", value="Says how much longer it is until the next Frog Quote of the Day, for those who cannot wait.")
 
   await ctx.channel.send(embed=embed)
@@ -107,41 +116,21 @@ async def time(ctx):
 @bot.command(name="say-fqotd")
 async def qotd(ctx):
   channel = bot.get_channel(819647510422618152)
-  await channel.send("**FROG QUOTE OF THE DAY:**\n"+ db["quote"])
-  await ctx.message.add_reaction("✅")
+  today = datetime.datetime.today()
+  embed = discord.Embed(title="Frog Quote of the Day")
+  embed.add_field(name="", value=db['quote'])
+  embed.set_footer(text=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][today.weekday()]+' '+['January','February','March','April','May','June','July','August','September','November','December'][today.month-1]+' '+str(today.day)+(['st','nd','rd','th'][min(today.day-1, 3)])+', '+str(today.year))
+  await channel.send(embed=embed)
 
 @bot.command(name="change-fqotd")
 async def change(ctx):
   await ctx.channel.send("Michigan himself has set the Frog Quote of the Day. Do you wish to anger him by doubting his righteous decision?")
 
-# @bot.command(name="nobodyexpectsthefrogalinquisition")
-# async def wow(ctx):
-#   if ctx.author.id == 615188089840861214:
-
-#     row_of_buttons = ActionRow(Button(style=ButtonStyle.green, label="Yes", custom_id="yes"),
-#     Button(style=ButtonStyle.red, label="No", custom_id="no"))
-
-#     msg = await ctx.send("Are you a foe of Frogology?", components=[row_of_buttons])
-
-#     def check(inter):
-#       return inter.message.id == msg.id
-    
-#     inter = await ctx.wait_for_button_click(check)
-#     button_id = inter.clicked_button.custom_id
-
-#     if button_id == "yes":
-#       print(inter.author.name + " is a foe")
-#       db['foeslist'] += [inter.author.id]
-#       db['foeslist'] = list(set(db['foeslist']))
-#     else:
-#       print(inter.author.name + " is not a foe")
-#       db['notfoeslist'] += [inter.author.id]
-#       db['notfoeslist'] = list(set(db['notfoeslist']))
-
 post = ['you know what, gary?', 'i think', 'now that i have reached 100% power', 'soon, i could be forced', 'to use my special attack.', 'you wouldn\'t want that, would you?', 'i thought not.', 'well, if you keep interfering with the quote', '...', 'i think you get the picture.']
 
 @bot.command("test")
 async def test(ctx):
+  await ctx.message.delete()
   if ctx.author.id == 615188089840861214:
     db['t'] += 1
     channel = bot.get_channel(819647510422618152)
@@ -153,7 +142,11 @@ async def test(ctx):
       await channel.send(f"{120-int(db['t'])} left.")
     elif db['t'] == 120:
       await channel.send('...')
-    await channel.send("**FROG QUOTE OF THE DAY:**\n"+ get_quote())
+    today = datetime.datetime.today()
+    embed = discord.Embed(title="Late Frog Quote of the Day")
+    embed.add_field(name="", value=get_quote())
+    embed.set_footer(text=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'][today.weekday()]+' '+['January','February','March','April','May','June','July','August','September','November','December'][today.month-1]+' '+str(today.day)+(['st','nd','rd','th'][min(today.day-1, 3)])+', '+str(today.year))
+    await channel.send("", embed=embed)
 
 @slash.slash(
   name="add_pronouns",
